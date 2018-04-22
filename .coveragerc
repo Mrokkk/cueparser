@@ -8,7 +8,7 @@ omit =
     test/*
     tests_run
     urwim/*
-source = playerlib
+source = cueparser
 
 [report]
 exclude_lines =
