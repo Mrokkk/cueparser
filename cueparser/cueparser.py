@@ -1,47 +1,51 @@
 #!/usr/bin/env python3
 
-import logging
 import os
 import re
-
-from time import gmtime, strftime
 
 class CueParser:
 
     class CueTrack:
-        def __init__(self):
-            self.file = None
-            self.performer = []
-            self.title = []
-            self.index = None
+        def __init__(self, filename, index):
+            self.file = filename
+            self.index = index
+            self.performer = None
+            self.title = None
             self.offset = 0
             self.length = 0
+
+        def __repr__(self):
+            return str(self.__dict__)
 
 
     class CueSheet:
         def __init__(self):
+            self.cdtextfile = None
+            self.catalog = None
+            self.performer = None
             self.rem = []
-            self.performer = []
-            self.artist = []
             self.title = []
             self.tracks = []
 
-    def __init__(self):
-        self.logger = logging.getLogger('CueParser')
+        def __repr__(self):
+            return str(self.__dict__)
+
 
     def _update_last_track_in_file(self, parent_dir, track):
-        try:
-            import taglib
-        except:
-            self.logger.warning('Cannot import taglib')
-            return
+        import taglib
         f = taglib.File(os.path.join(parent_dir, track.file))
         track.length = f.length - track.offset
 
-    def _add_regex_match_to_list(self, tag_list, regex, line):
+    def _append_regex_match(self, tag_list, regex, line):
         match = re.match(regex, line)
         if match:
             tag_list.append(match.group(1))
+            return True
+
+    def _assign_regex_match(self, obj, key, regex, line):
+        match = re.match(regex, line)
+        if match:
+            obj.__dict__[key] = match.group(1).replace("\\", "\\\\")
             return True
 
     def _parse_file(self, f, use_taglib, parent_dir):
@@ -51,11 +55,16 @@ class CueParser:
         for raw_line in f:
             line = raw_line.rstrip()
 
-            if self._add_regex_match_to_list(cuesheet.rem, '^REM (.*)$', line): continue
-            elif self._add_regex_match_to_list(cuesheet.performer, '^PERFORMER \"(.*)\"$', line): continue
-            elif self._add_regex_match_to_list(cuesheet.title, '^TITLE \"(.*)\"$', line): continue
+            if self._append_regex_match(cuesheet.rem, r'^REM (.*)$', line): continue
+            elif self._assign_regex_match(cuesheet, 'performer', r'^PERFORMER "(.*)"$', line): continue
+            elif self._assign_regex_match(cuesheet, 'title', r'^TITLE "(.*)"$', line): continue
+            elif self._assign_regex_match(cuesheet, 'cdtextfile', r'^CDTEXTFILE "(.*)"$', line): continue
+            elif self._assign_regex_match(cuesheet, 'catalog', r'^CATALOG "(.*)"$', line): continue
+            elif current_track:
+                if self._assign_regex_match(current_track, 'title', r'^    TITLE "(.*)"$', line): continue
+                elif self._assign_regex_match(current_track, 'performer', r'^    PERFORMER "(.*)"$', line): continue
 
-            match = re.match('^FILE \"(.*)\".*$', line)
+            match = re.match(r'^FILE "(.*)"$', line)
             if match:
                 current_file = match.group(1).replace("\\", "\\\\")
                 continue
@@ -64,9 +73,7 @@ class CueParser:
             if match:
                 if current_track:
                     cuesheet.tracks.append(current_track)
-                current_track = self.CueTrack()
-                current_track.index = int(match.group(1))
-                current_track.file = current_file
+                current_track = self.CueTrack(current_file, int(match.group(1)))
                 continue
 
             match = re.match('^    INDEX 01 (\d{2}):(\d{2}):(\d{2})$', line)
@@ -80,10 +87,6 @@ class CueParser:
                         elif use_taglib:
                             self._update_last_track_in_file(parent_dir, last_track)
                 continue
-
-            if current_track:
-                if self._add_regex_match_to_list(current_track.title, '^    TITLE \"(.*)\"$', line): continue
-                elif self._add_regex_match_to_list(current_track.performer, '^    PERFORMER \"(.*)\"$', line): continue
 
         if current_track:
             if use_taglib:
@@ -101,5 +104,5 @@ class CueParser:
                 with open(path, 'r', encoding=encoding) as f:
                     return self._parse_file(f, use_taglib, parent_dir)
             except Exception as e:
-                self.logger.warning('Cannot open {} using encoding {}: {}'.format(path, encoding, str(e)))
+                return
 

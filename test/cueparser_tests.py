@@ -16,8 +16,8 @@ class CueParserTests(TestCase):
         m.return_value.__next__ = lambda self: next(iter(self.readline, ''))
         with patch('builtins.open', m):
             cuesheet = self.sut.parse('some/path')
-        self.assertEqual(cuesheet.title, ['The Number of the Beast'])
-        self.assertEqual(cuesheet.performer, ['Iron Maiden'])
+        self.assertEqual(cuesheet.title, 'The Number of the Beast')
+        self.assertEqual(cuesheet.performer, 'Iron Maiden')
         self.assertEqual(cuesheet.rem, ['GENRE Heavy Metal'])
 
     def test_can_parse_tracks(self):
@@ -32,12 +32,12 @@ class CueParserTests(TestCase):
         track1 = cuesheet.tracks[0]
         track2 = cuesheet.tracks[1]
         self.assertEqual(track1.index, 1)
-        self.assertEqual(track1.title, ['Invaders'])
-        self.assertEqual(track1.performer, ['Iron Maiden'])
+        self.assertEqual(track1.title, 'Invaders')
+        self.assertEqual(track1.performer, 'Iron Maiden')
         self.assertEqual(track1.offset, 0)
         self.assertEqual(track2.index, 2)
-        self.assertEqual(track2.title, ['Children of the Damned'])
-        self.assertEqual(track2.performer, ['Iron Maiden'])
+        self.assertEqual(track2.title, 'Children of the Damned')
+        self.assertEqual(track2.performer, 'Iron Maiden')
         self.assertEqual(track2.offset, 203)
 
     def test_should_ignore_track_tags_if_no_track_given(self):
@@ -57,8 +57,8 @@ class CueParserTests(TestCase):
         m.return_value.__next__ = lambda self: next(iter(self.readline, ''))
         with patch('builtins.open', m):
             cuesheet = self.sut.parse('path')
-        self.assertEqual(cuesheet.title, ['The Number of the Beast'])
-        self.assertEqual(cuesheet.performer, ['Iron Maiden'])
+        self.assertEqual(cuesheet.title, 'The Number of the Beast')
+        self.assertEqual(cuesheet.performer, 'Iron Maiden')
         self.assertEqual(cuesheet.rem, ['GENRE Heavy Metal'])
 
     def test_can_read_tracks_length(self):
