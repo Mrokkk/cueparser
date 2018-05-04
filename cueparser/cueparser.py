@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 import os
 import re
 
@@ -30,6 +31,9 @@ class CueParser:
         def __repr__(self):
             return str(self.__dict__)
 
+
+    def __init__(self):
+        self.logger = logging.getLogger('CueParser')
 
     def _update_last_track_in_file(self, parent_dir, track):
         import taglib
@@ -64,7 +68,7 @@ class CueParser:
                 if self._assign_regex_match(current_track, 'title', r'^    TITLE "(.*)"$', line): continue
                 elif self._assign_regex_match(current_track, 'performer', r'^    PERFORMER "(.*)"$', line): continue
 
-            match = re.match(r'^FILE "(.*)"$', line)
+            match = re.match('^FILE "(.*)"', line)
             if match:
                 current_file = match.group(1).replace("\\", "\\\\")
                 continue
@@ -72,6 +76,7 @@ class CueParser:
             match = re.match('^  TRACK (\d+) AUDIO$', line)
             if match:
                 if current_track:
+                    self.logger.debug(current_track)
                     cuesheet.tracks.append(current_track)
                 current_track = self.CueTrack(current_file, int(match.group(1)))
                 continue
@@ -91,6 +96,7 @@ class CueParser:
         if current_track:
             if use_taglib:
                 self._update_last_track_in_file(parent_dir, current_track)
+            self.logger.debug(current_track)
             cuesheet.tracks.append(current_track)
 
         return cuesheet
@@ -104,5 +110,5 @@ class CueParser:
                 with open(path, 'r', encoding=encoding) as f:
                     return self._parse_file(f, use_taglib, parent_dir)
             except Exception as e:
-                return
+                pass
 

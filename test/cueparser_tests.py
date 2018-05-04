@@ -21,7 +21,7 @@ class CueParserTests(TestCase):
         self.assertEqual(cuesheet.rem, ['GENRE Heavy Metal'])
 
     def test_can_parse_tracks(self):
-        lines = ['  TRACK 01 AUDIO', '    TITLE "Invaders"', '    PERFORMER "Iron Maiden"', '    INDEX 01 00:00:00',
+        lines = ['FILE "album.flac" WAVE', '  TRACK 01 AUDIO', '    TITLE "Invaders"', '    PERFORMER "Iron Maiden"', '    INDEX 01 00:00:00',
                  '  TRACK 02 AUDIO', '    TITLE "Children of the Damned"', '    PERFORMER "Iron Maiden"', '    INDEX 01 03:23:00']
         m = mock_open(read_data='\n'.join(lines))
         m.return_value.__iter__ = lambda self: self
@@ -31,10 +31,12 @@ class CueParserTests(TestCase):
         self.assertEqual(len(cuesheet.tracks), 2)
         track1 = cuesheet.tracks[0]
         track2 = cuesheet.tracks[1]
+        self.assertEqual(track1.file, 'album.flac')
         self.assertEqual(track1.index, 1)
         self.assertEqual(track1.title, 'Invaders')
         self.assertEqual(track1.performer, 'Iron Maiden')
         self.assertEqual(track1.offset, 0)
+        self.assertEqual(track2.file, 'album.flac')
         self.assertEqual(track2.index, 2)
         self.assertEqual(track2.title, 'Children of the Damned')
         self.assertEqual(track2.performer, 'Iron Maiden')
