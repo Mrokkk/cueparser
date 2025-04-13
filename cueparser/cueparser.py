@@ -73,7 +73,7 @@ class CueParser:
                 current_file = match.group(1).replace("\\", "\\\\")
                 continue
 
-            match = re.match('^  TRACK (\d+) AUDIO$', line)
+            match = re.match('^  TRACK ([0-9]+) AUDIO$', line)
             if match:
                 if current_track:
                     self.logger.debug(current_track)
@@ -81,7 +81,7 @@ class CueParser:
                 current_track = self.CueTrack(current_file, int(match.group(1)))
                 continue
 
-            match = re.match('^    INDEX 01 (\d{2}):(\d{2}):(\d{2})$', line)
+            match = re.match('^    INDEX 01 ([0-9]{2}):([0-9]{2}):([0-9]{2})$', line)
             if match:
                 if current_track:
                     current_track.offset = int(match.group(1)) * 60 + int(match.group(2))
@@ -100,7 +100,6 @@ class CueParser:
             cuesheet.tracks.append(current_track)
 
         return cuesheet
-
 
     def parse(self, path, use_taglib=False):
         parent_dir = os.path.dirname(path)
